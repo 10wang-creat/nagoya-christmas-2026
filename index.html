@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎄 名古屋聖誕之旅 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --christmas-red: #c41e3a;
+            --christmas-green: #1a472a;
+            --christmas-gold: #ffd700;
+            --snow-white: #f8f9fa;
+            --warm-cream: #fff8e7;
+            --dark-green: #0d2818;
+            --soft-red: #e85a71;
+            --ice-blue: #a8d5e5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(180deg, var(--dark-green) 0%, #1a3a2a 100%);
+            color: var(--snow-white);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Snowfall Animation */
+        .snowflakes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .snowflake {
+            position: absolute;
+            top: -10px;
+            color: white;
+            font-size: 1em;
+            opacity: 0.8;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 60px 20px 40px;
+            background: linear-gradient(180deg, rgba(196, 30, 58, 0.3) 0%, transparent 100%);
+            position: relative;
+        }
+
+        .header::before {
+            content: '🎄';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 2rem;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        .header::after {
+            content: '🎄';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 2rem;
+            animation: bounce 2s ease-in-out infinite 0.5s;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            color: var(--snow-white);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 15px;
+        }
+
+        .header .subtitle {
+            font-size: 1.1rem;
+            color: var(--christmas-gold);
+            margin-bottom: 20px;
+        }
+
+        .header .trip-info {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            font-size: 0.95rem;
+        }
+
+        .header .trip-info span {
+            background: rgba(255,255,255,0.15);
+            padding: 8px 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Navigation */
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav a {
+            color: var(--snow-white);
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 25px;
+            background: rgba(196, 30, 58, 0.3);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .nav a:hover, .nav a.active {
+            background: var(--christmas-red);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(196, 30, 58, 0.4);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Section Styles */
+        .section {
+            background: rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .section h2 {
+            font-family: 'Playfair Display', serif;
+            color: var(--christmas-gold);
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Hotel Info Card */
+        .hotel-card {
+            background: linear-gradient(135deg, var(--christmas-red) 0%, #8b1538 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .hotel-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+
+        .hotel-card .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .hotel-card .info-item {
+            background: rgba(255,255,255,0.15);
+            padding: 12px 15px;
+            border-radius: 10px;
+        }
+
+        .hotel-card .info-item label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Day Cards */
+        .day-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .day-header {
+            background: linear-gradient(90deg, var(--christmas-green) 0%, #2d5a3d 100%);
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s ease;
+        }
+
+        .day-header:hover {
+            background: linear-gradient(90deg, #2d5a3d 0%, var(--christmas-green) 100%);
+        }
+
+        .day-header h3 {
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .day-header .toggle {
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .day-header.active .toggle {
+            transform: rotate(180deg);
+        }
+
+        .day-content {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .day-content.active {
+            padding: 20px;
+            max-height: 2000px;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--christmas-gold) 0%, var(--christmas-red) 100%);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .timeline-item:hover {
+            transform: translateX(5px);
+            background: rgba(255,255,255,0.1);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 20px;
+            width: 12px;
+            height: 12px;
+            background: var(--christmas-gold);
+            border-radius: 50%;
+            border: 2px solid var(--dark-green);
+        }
+
+        .timeline-item .time {
+            color: var(--christmas-gold);
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .timeline-item .activity {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .timeline-item .details {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .timeline-item .highlight {
+            display: inline-block;
+            background: var(--christmas-red);
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-top: 8px;
+        }
+
+        /* Restaurant Cards */
+        .restaurant-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .restaurant-card {
+            background: linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .restaurant-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-color: var(--christmas-gold);
+        }
+
+        .restaurant-card .emoji {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .restaurant-card h4 {
+            color: var(--christmas-gold);
+            margin-bottom: 8px;
+        }
+
+        .restaurant-card .type {
+            font-size: 0.8rem;
+            color: var(--soft-red);
+            margin-bottom: 10px;
+        }
+
+        .restaurant-card .address {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-bottom: 10px;
+        }
+
+        .restaurant-card .must-try {
+            background: rgba(196, 30, 58, 0.3);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+
+        .restaurant-card .must-try strong {
+            color: var(--christmas-gold);
+        }
+
+        /* Map Section */
+        #map {
+            height: 450px;
+            border-radius: 15px;
+            margin-top: 20px;
+            border: 3px solid rgba(255,255,255,0.2);
+        }
+
+        .map-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        /* Tips Section */
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .tip-card {
+            background: rgba(255,215,0,0.1);
+            border-left: 4px solid var(--christmas-gold);
+            padding: 15px;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .tip-card h4 {
+            color: var(--christmas-gold);
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .tip-card p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(0,0,0,0.3);
+            margin-top: 40px;
+        }
+
+        .footer p {
+            opacity: 0.7;
+            font-size: 0.85rem;
+        }
+
+        .footer .save-tip {
+            background: var(--christmas-red);
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 25px;
+            margin-bottom: 15px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                padding: 40px 15px 30px;
+            }
+
+            .nav {
+                gap: 8px;
+                padding: 15px 10px;
+            }
+
+            .nav a {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+
+            .section {
+                padding: 20px 15px;
+            }
+
+            .timeline {
+                padding-left: 25px;
+            }
+
+            #map {
+                height: 350px;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--dark-green);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--christmas-red);
+            border-radius: 4px;
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.6s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Snowfall Effect -->
+    <div class="snowflakes" id="snowflakes"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <h1>🎄 名古屋聖誕之旅</h1>
+        <p class="subtitle">Nagoya Christmas Trip 2026</p>
+        <div class="trip-info">
+            <span>📅 12/24（四）～ 12/27（日）</span>
+            <span>👫 2人同行</span>
+            <span>🌟 吉卜力公園 × 聖誕市集</span>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <a href="#overview" class="active">📋 總覽</a>
+        <a href="#day1">✈️ Day1</a>
+        <a href="#day2">🎄 Day2</a>
+        <a href="#day3">🐟 Day3</a>
+        <a href="#day4">☕ Day4</a>
+        <a href="#food">🍽️ 美食</a>
+        <a href="#map">🗺️ 地圖</a>
+    </nav>
+
+    <main class="container">
+        <!-- Hotel Info -->
+        <section class="hotel-card fade-in" id="overview">
+            <h3>🏨 住宿資訊</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>飯店名稱</label>
+                    <strong>相鐵Fresa Inn 名古屋駅桜通口</strong>
+                </div>
+                <div class="info-item">
+                    <label>地址</label>
+                    名古屋市中村區名驛4-4-15
+                </div>
+                <div class="info-item">
+                    <label>入住 / 退房</label>
+                    12/24 入住 → 12/27 退房（3晚）
+                </div>
+                <div class="info-item">
+                    <label>房型 / 費用</label>
+                    雙人大床房 ¥34,484
+                </div>
+            </div>
+        </section>
+
+        <!-- Day 1 -->
+        <section class="section fade-in" id="day1">
+            <h2>📅 行程規劃</h2>
+            
+            <div class="day-card">
+                <div class="day-header active" onclick="toggleDay(this)">
+                    <h3>✈️ Day 1（12/24 週四）抵達名古屋</h3>
+                    <span class="toggle">▼</span>
+                </div>
+                <div class="day-content active">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="time">17:20</div>
+                            <div class="activity">🛫 桃園機場出發</div>
+                            <div class="details">虎航班機前往名古屋</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">21:15</div>
+                            <div class="activity">🛬 抵達中部國際機場</div>
+                            <div class="details">過海關、領行李約需40分鐘</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">約 22:00</div>
+                            <div class="activity">🚃 搭乘名鐵前往名古屋</div>
+                            <div class="details">μ-SKY 特急約28分鐘，或一般特急約35分鐘</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">約 23:00</div>
+                            <div class="activity">🏨 抵達飯店 Check-in</div>
+                            <div class="details">從名鐵名古屋站步行約3-5分鐘<br>建議在車站買點輕食當宵夜</div>
+                            <span class="highlight">早點休息，明天吉卜力！</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 2 -->
+            <div class="day-card" id="day2">
+                <div class="day-header" onclick="toggleDay(this)">
+                    <h3>🎄 Day 2（12/25 週五）吉卜力公園 + 聖誕市集</h3>
+                    <span class="toggle">▼</span>
+                </div>
+                <div class="day-content">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="time">08:00</div>
+                            <div class="activity">🍞 Tsubame Bread & Milk 早餐</div>
+                            <div class="details">📍 名古屋市中村區名駅4-26-25<br>必點：歐姆蛋三明治 ¥730、小倉紅豆吐司</div>
+                            <span class="highlight">北海道美瑛生吐司名店</span>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">09:00</div>
+                            <div class="activity">🚃 出發前往吉卜力公園</div>
+                            <div class="details">地鐵東山線 → 藤が丘 → Linimo<br>到「愛・地球博記念公園」站，約50分鐘</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">10:00 - 17:00</div>
+                            <div class="activity">🏰 吉卜力公園</div>
+                            <div class="details">建議先逛：吉卜力大倉庫、青春之丘<br>園區很大，一天可能逛不完</div>
+                            <span class="highlight">記得確認門票已預約！</span>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">17:30</div>
+                            <div class="activity">🚃 前往榮站</div>
+                            <div class="details">Linimo → 藤が丘 → 地鐵東山線到榮站</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">18:00</div>
+                            <div class="activity">🎄 榮站聖誕市集</div>
+                            <div class="details">久屋大通公園<br>可以買聖誕交換禮物、吃市集小吃</div>
+                            <span class="highlight">聖誕氛圍滿點！🎁</span>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">19:30</div>
+                            <div class="activity">🗼 中部電力 MIRAI TOWER 夜景</div>
+                            <div class="details">名古屋電視塔，欣賞城市夜景</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">21:00</div>
+                            <div class="activity">🏨 返回飯店休息</div>
+                            <div class="details">搭地鐵回名古屋車站</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 3 -->
+            <div class="day-card" id="day3">
+                <div class="day-header" onclick="toggleDay(this)">
+                    <h3>🐟 Day 3（12/26 週六）吉卜力 + 鰻魚飯 + 點燈</h3>
+                    <span class="toggle">▼</span>
+                </div>
+                <div class="day-content">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="time">07:30</div>
+                            <div class="activity">🚃 出發前往吉卜力公園</div>
+                            <div class="details">今天9點開園，要早點出門</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">09:00 - 17:00</div>
+                            <div class="activity">🏰 吉卜力公園（第二天）</div>
+                            <div class="details">逛昨天沒逛完的區域<br>魔女之谷、DONDOKO之森等</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">18:00</div>
+                            <div class="activity">🍰 HARBS 買千層蛋糕</div>
+                            <div class="details">📍 高島屋 Gate Tower Mall 4F<br>必買：水果千層蛋糕（ミルクレープ）¥980</div>
+                            <span class="highlight">外帶回飯店當宵夜！</span>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">18:15</div>
+                            <div class="activity">🏨 回飯店放蛋糕</div>
+                            <div class="details">記得冷藏保鮮</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">18:30</div>
+                            <div class="activity">🐟 ひつまぶし う家 晚餐</div>
+                            <div class="details">📍 名駅地下街メイチカ<br>名古屋鰻魚飯三吃，特選大尺寸鰻魚</div>
+                            <span class="highlight">必吃名古屋名物！</span>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">20:00</div>
+                            <div class="activity">🎄 名古屋車站聖誕點燈</div>
+                            <div class="details">JR Gate Tower、名古屋大廈周邊<br>聖誕樹和燈飾超美</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">21:00</div>
+                            <div class="activity">🍰 回飯店吃千層蛋糕</div>
+                            <div class="details">完美的聖誕宵夜時光 ✨</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 4 -->
+            <div class="day-card" id="day4">
+                <div class="day-header" onclick="toggleDay(this)">
+                    <h3>☕ Day 4（12/27 週日）早餐 + 則武之森 + 回程</h3>
+                    <span class="toggle">▼</span>
+                </div>
+                <div class="day-content">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="time">07:00</div>
+                            <div class="activity">☕ Coffee House KAKO 早餐</div>
+                            <div class="details">📍 柳橋店：名古屋市中村區名駅5-30-4<br>必點：四種果醬紅豆吐司套餐 約¥950</div>
+                            <span class="highlight">名古屋早餐文化代表！</span>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">08:30</div>
+                            <div class="activity">🏨 回飯店 Check-out</div>
+                            <div class="details">收拾行李，寄放在飯店或車站置物櫃</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">09:30</div>
+                            <div class="activity">🌳 則武之森散步</div>
+                            <div class="details">📍 名古屋市西區則武新町3-1-36<br>陶瓷主題公園，美麗庭園<br>步行約15分鐘或搭地鐵一站</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">11:30</div>
+                            <div class="activity">🚃 返回名古屋車站</div>
+                            <div class="details">取行李，準備前往機場</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">12:00</div>
+                            <div class="activity">🚃 搭名鐵前往中部國際機場</div>
+                            <div class="details">預留充裕時間辦理登機</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="time">下午</div>
+                            <div class="activity">✈️ 回程班機</div>
+                            <div class="details">期待下次旅行！🎄</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Food Section -->
+        <section class="section fade-in" id="food">
+            <h2>🍽️ 美食地圖</h2>
+            <div class="restaurant-grid">
+                <div class="restaurant-card">
+                    <div class="emoji">🍞</div>
+                    <h4>Tsubame Bread & Milk</h4>
+                    <div class="type">早餐 · 生吐司專門店</div>
+                    <div class="address">📍 名古屋市中村區名駅4-26-25<br>🕐 8:00～20:00</div>
+                    <div class="must-try"><strong>必點：</strong>歐姆蛋三明治、小倉紅豆吐司</div>
+                </div>
+                <div class="restaurant-card">
+                    <div class="emoji">☕</div>
+                    <h4>Coffee House KAKO</h4>
+                    <div class="type">早餐 · 自家烘焙咖啡</div>
+                    <div class="address">📍 柳橋店：名古屋市中村區名駅5-30-4<br>🕐 7:00～19:00</div>
+                    <div class="must-try"><strong>必點：</strong>四種果醬紅豆吐司套餐</div>
+                </div>
+                <div class="restaurant-card">
+                    <div class="emoji">🐟</div>
+                    <h4>ひつまぶし う家</h4>
+                    <div class="type">晚餐 · 鰻魚飯專門店</div>
+                    <div class="address">📍 名古屋市中村區名駅3-14-15<br>　 メイチカ地下街</div>
+                    <div class="must-try"><strong>必點：</strong>鰻魚飯三吃（ひつまぶし）</div>
+                </div>
+                <div class="restaurant-card">
+                    <div class="emoji">🍰</div>
+                    <h4>HARBS</h4>
+                    <div class="type">甜點 · 千層蛋糕名店</div>
+                    <div class="address">📍 高島屋 Gate Tower Mall 4F<br>🕐 10:00～21:00</div>
+                    <div class="must-try"><strong>必點：</strong>水果千層蛋糕（ミルクレープ）</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Map Section -->
+        <section class="section fade-in" id="map">
+            <h2>🗺️ 互動式地圖</h2>
+            <p style="opacity: 0.8; margin-bottom: 15px;">點擊標記可查看詳細資訊</p>
+            <div id="map"></div>
+            <div class="map-legend">
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #e74c3c;"></div>
+                    <span>住宿</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #f39c12;"></div>
+                    <span>美食餐廳</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #27ae60;"></div>
+                    <span>景點</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #3498db;"></div>
+                    <span>交通樞紐</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tips Section -->
+        <section class="section fade-in">
+            <h2>💡 旅行小提醒</h2>
+            <div class="tips-grid">
+                <div class="tip-card">
+                    <h4>🎫 吉卜力公園門票</h4>
+                    <p>請確認門票已預約好，熱門時段容易售罄。可到官網或 Lawson 購票。</p>
+                </div>
+                <div class="tip-card">
+                    <h4>💳 交通卡</h4>
+                    <p>建議購買 IC 卡（manaca/ICOCA/Suica）方便搭車，便利商店也能使用。</p>
+                </div>
+                <div class="tip-card">
+                    <h4>🧥 天氣穿著</h4>
+                    <p>12月底名古屋約 2-10°C，記得帶保暖衣物、圍巾、手套。</p>
+                </div>
+                <div class="tip-card">
+                    <h4>⏰ 餐廳排隊</h4>
+                    <p>假日早餐店容易排隊（尤其KAKO），建議早點出門或選擇柳橋店。</p>
+                </div>
+                <div class="tip-card">
+                    <h4>🚃 吉卜力交通</h4>
+                    <p>從名古屋車站搭地鐵+Linimo約50分鐘，建議預留充裕轉乘時間。</p>
+                </div>
+                <div class="tip-card">
+                    <h4>🎄 聖誕活動</h4>
+                    <p>12月底人潮多，逛聖誕市集注意隨身物品，提早卡位看點燈。</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="save-tip">📱 建議儲存到手機書籤，旅行時隨時查看！</div>
+        <p>🎄 名古屋聖誕之旅 2026 | 4天3夜精彩行程</p>
+        <p style="margin-top: 10px;">© 2025 - 為朋友準備的旅遊指南 ❤️</p>
+    </footer>
+
+    <script>
+        // Snowfall Effect
+        function createSnowflakes() {
+            const container = document.getElementById('snowflakes');
+            const snowflakeChars = ['❄', '❅', '❆', '✻', '✼'];
+            
+            for (let i = 0; i < 50; i++) {
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                snowflake.innerHTML = snowflakeChars[Math.floor(Math.random() * snowflakeChars.length)];
+                snowflake.style.left = Math.random() * 100 + '%';
+                snowflake.style.animationDuration = (Math.random() * 3 + 5) + 's';
+                snowflake.style.animationDelay = Math.random() * 5 + 's';
+                snowflake.style.fontSize = (Math.random() * 10 + 10) + 'px';
+                snowflake.style.opacity = Math.random() * 0.6 + 0.4;
+                container.appendChild(snowflake);
+            }
+        }
+
+        // Toggle Day Content
+        function toggleDay(header) {
+            const content = header.nextElementSibling;
+            const isActive = header.classList.contains('active');
+            
+            // Close all
+            document.querySelectorAll('.day-header').forEach(h => h.classList.remove('active'));
+            document.querySelectorAll('.day-content').forEach(c => c.classList.remove('active'));
+            
+            // Toggle current
+            if (!isActive) {
+                header.classList.add('active');
+                content.classList.add('active');
+            }
+        }
+
+        // Smooth Scroll for Navigation
+        document.querySelectorAll('.nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const target = document.querySelector(targetId);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                
+                // Update active state
+                document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Initialize Map
+        function initMap() {
+            const map = L.map('map').setView([35.1709, 136.8815], 12);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Custom Icons
+            const createIcon = (color) => L.divIcon({
+                html: `<div style="background:${color};width:24px;height:24px;border-radius:50%;border:3px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);"></div>`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 12],
+                popupAnchor: [0, -12]
+            });
+
+            const hotelIcon = createIcon('#e74c3c');
+            const foodIcon = createIcon('#f39c12');
+            const spotIcon = createIcon('#27ae60');
+            const stationIcon = createIcon('#3498db');
+
+            // Markers
+            const locations = [
+                // 住宿
+                { lat: 35.1709, lng: 136.8815, name: '🏨 相鐵Fresa Inn', desc: '名古屋駅桜通口<br>3晚住宿', icon: hotelIcon },
+                
+                // 美食
+                { lat: 35.1705, lng: 136.8798, name: '🍞 Tsubame Bread & Milk', desc: '名駅店<br>歐姆蛋三明治、生吐司', icon: foodIcon },
+                { lat: 35.1698, lng: 136.8780, name: '☕ Coffee House KAKO', desc: '柳橋店<br>四種果醬紅豆吐司', icon: foodIcon },
+                { lat: 35.1712, lng: 136.8825, name: '🐟 ひつまぶし う家', desc: '名駅メイチカ<br>鰻魚飯三吃', icon: foodIcon },
+                { lat: 35.1708, lng: 136.8830, name: '🍰 HARBS', desc: 'Gate Tower Mall 4F<br>水果千層蛋糕', icon: foodIcon },
+                
+                // 景點
+                { lat: 35.1853, lng: 137.0858, name: '🏰 吉卜力公園', desc: '愛・地球博記念公園<br>主要行程！', icon: spotIcon },
+                { lat: 35.1710, lng: 136.9085, name: '🗼 中部電力 MIRAI TOWER', desc: '名古屋電視塔<br>夜景推薦', icon: spotIcon },
+                { lat: 35.1710, lng: 136.9070, name: '🎄 榮聖誕市集', desc: '久屋大通公園<br>聖誕交換禮物', icon: spotIcon },
+                { lat: 35.1780, lng: 136.8720, name: '🌳 則武之森', desc: 'ノリタケの森<br>陶瓷主題公園', icon: spotIcon },
+                
+                // 交通
+                { lat: 35.1706, lng: 136.8819, name: '🚃 名古屋車站', desc: 'JR・名鐵・地鐵', icon: stationIcon },
+                { lat: 34.8584, lng: 136.8054, name: '✈️ 中部國際機場', desc: 'Centrair', icon: stationIcon },
+            ];
+
+            locations.forEach(loc => {
+                L.marker([loc.lat, loc.lng], { icon: loc.icon })
+                    .addTo(map)
+                    .bindPopup(`<strong>${loc.name}</strong><br>${loc.desc}`);
+            });
+
+            // Add route line from station to Ghibli
+            const ghibliRoute = [
+                [35.1706, 136.8819], // 名古屋車站
+                [35.1780, 136.9650], // 藤が丘
+                [35.1853, 137.0858]  // 吉卜力公園
+            ];
+            L.polyline(ghibliRoute, { color: '#27ae60', weight: 3, dashArray: '10, 10' }).addTo(map);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            createSnowflakes();
+            initMap();
+        });
+    </script>
+</body>
+</html>
